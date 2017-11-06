@@ -1,0 +1,44 @@
+#*********************************************************************************************************#
+#                                                                                                         #
+# Program Name      : little_league_baseball_data.txt                                                     #
+# File Location     : C:\Users\team8CG\2006\January\LittleLeagueBaseball\little_league_baseball_data.txt  #                                                                
+# Date First Created: 01-05-2006                                                                          #
+# Date Last Modified: 01-17-2006                                                                          #      
+# Created By        : Abhijeet Shinde                                                                     #
+#                     Naga Ramesh Kamisetti                                                               #                      
+#	              Prashanth Potana                                                                    #
+# Purpose           : Scheduling Baseball League for Little League Baseball College Station               #
+# Input Data File   : C:\Users\team8CG\2006\January\LittleLeagueBaseball\little_league_baseball_model.txt # 
+# 					                                                                  #
+#*********************************************************************************************************#
+
+param B:= 19;  # Total number of blocks
+param G:=  4;  # Maximum number of games possible in a Monday-Thursday block
+param GS:= 4;  # Maximum number of games possible in a saturday block
+param N:=  9;  # Number of teams participating in the league
+param R:=  1;  # Number of times each team must receive every other team
+param M:=  1;  # Maximum number of games a team can play in a monday to thursday block
+param MS:= 1;  # maximum number of games a team can play ion a saturday 
+set MT= 1 3 5 7 8 10 12 14 16 18 19;    # Set of Block numbers having Monday-Thursday defined as block
+set S= 2 4 6 9 11 13 15 17;		# Set of Block numbers having Saturday defined as block
+
+
+param H:= 1 0 # Number of off-slots in block k
+	  2 0
+	  3 0
+   	  4 0
+	  5 0
+	  6 0
+	  7 0
+	  8 0
+	  9 0
+	  10 0
+	  11 0
+	  12 0
+	  13 0
+	  14 0
+	  15 0
+	  16 0
+	  17 0
+	  18 0
+	  19 2;

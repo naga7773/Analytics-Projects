@@ -1,0 +1,62 @@
+#*********************************************************************************************************#
+#                                                                                                         #
+# Program Name      : little_league_baseball_model.txt                                                    #
+# File Location     : C:\Users\team8CG\2006\January\LittleLeagueBaseball\little_league_baseball_model.txt #                                                                #
+# Date First Created: 01-05-2006                                                                          #
+# Date Last Modified: 01-17-2006                                                                          #      
+# Created By        : Abhijeet Shinde                                                                     #
+#                     Naga Ramesh Kamisetti                                                               #                      
+#	              Prashanth Potana                                                                    #
+# Purpose           : Scheduling Baseball League for Little League Baseball College Station               #
+# Input Data File   : C:\Users\team8CG\2006\January\LittleLeagueBaseball\little_league_baseball_data.txt  # 
+# 													  #
+#*********************************************************************************************************#
+
+# Parameters used in the model
+
+param B;             # Total number of blocks
+param G;             # Maximum number of games possible in a Monday-Thursday block excluding holidays
+param GS;            # Maximum number of games possible in a Saturday block excluding holidays
+param N;             # Number of teams participating in the league 
+param R;             # Number of times each team must receive every other team
+param M;             # Maximum number of games a team can play in a Monday-Thursday block 
+param MS;            # Maximum number of games a team can play in a Saturday block
+param H{k in 1..B}; # Number of off-slots in block k
+set MT;		     # Set of Block numbers having Monday-Thursday defined as block
+set S;		     # Set of Block numbers having Saturday defined as block
+
+# Variables used in the model
+
+var X{i in 1..N,j in 1..N,k in 1..B} binary; # X takes a value of 1 when team i receives team j in block k
+var Y{i in 1..N,j in 1..N:i!=j}; # defined for creating a schedule display matrix and Y takes block number
+
+# Objective Function
+
+maximize Z: 0;
+
+subject to
+
+# Each team must recceive every other team exactly R times
+Constraint1{i in 1..N,j in 1..N:i!=j}: sum{k in 1..B} X[i,j,k]=R;
+
+# In Monday- Thursday block, each team can play at most M times
+Constraint2a{k in MT, i in 1..N}: sum{t in 1..N:t!=i} X[i,t,k] + sum{t in 1..N:t!=i} X[t,i,k]<=M;
+
+# In Saturday block, each team can play at most MS times
+Constraint2b{k in S, i in 1..N}: sum{t in 1..N:t!=i} X[i,t,k] + sum{t in 1..N:t!=i} X[t,i,k]<=MS;
+
+# The game capacity of each block cannot be exceeded
+
+## For Monday- Thursday Block
+Constraint3a{k in MT}: sum{i in 1..N,j in 1..N} X[i,j,k]<=(G-H[k]);
+
+## For Saturday Block
+Constraint3b{k in S}: sum{i in 1..N,j in 1..N} X[i,j,k]<=(GS-H[k]);
+
+# Y displays block number in which a game is scheduled
+Constraint4{i in 1..N,j in 1..N:i!=j}: Y[i,j] = sum{k in 1..B}(k * X[i,j,k]);
+
+
+
+
+

@@ -1,7 +1,8 @@
 ---
-title: Exploratory Data Analysis of White wine quality
-Author: Naga Ramesh Kamisetti
+title: "Exploratory Data Analysis of White wine quality"
 Date: September 25, 2016
+output: pdf_document
+Author: Naga Ramesh Kamisetti
 ---
 This is my fourth project in the nano degree program of Data Analysis by 
 Udacity. In this project I leveraged the R libraries to explore white wine 

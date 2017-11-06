@@ -1,0 +1,68 @@
+#***********************************************************************************************************#
+#                                                                                                           #
+# Program Name      : little_league_baseball_model_2.txt                                                    #
+# File Location     : C:\Users\team8CG\2006\January\LittleLeagueBaseball\little_league_baseball_model_2.txt #                                                                
+# Date First Created: 01-05-2006                                                                            #
+# Date Last Modified: 01-17-2006                                                                            #      
+# Created By        : Abhijeet Shinde                                                                       #
+#                     Naga Ramesh Kamisetti                                                                 #                      
+#	              Prashanth Potana                                                                      #
+# Purpose           : Scheduling Baseball League for Little League Baseball College Station                 #
+# Input Data File   : C:\Users\team8CG\2006\January\LittleLeagueBaseball\little_league_baseball_data_2.txt  # 
+# 					                                                                    #
+#***********************************************************************************************************#
+
+# Parameters used in the model
+param N;               # Number of teams participating in league
+param W;               # Number of weeks
+param G;               # Maximum possible number of games in a week
+param F;               # Maximum possible number of games from Monday to Thursday or on a Saturday in a week
+param P;               # Number of times each team must receive every other team
+param R;               # Maximum number of games possible on a day from Monday - Thursday or in a slot on Saturday 
+param T;               # Maximum number of games for a team on Monday - Thursday block or on a Saturday
+param H{d in 1..G,w in 1..W};      # gets the value 1 if the corresponding day is holiday otherwise 0
+param K{d in 1..G,w in 1..W};      # slot number ranging from 1-74 (possible number of game slots) 
+param U{d in 1..G,w in 1..W};      # Date corresponding to a day and week
+# Variables used in the model
+
+var X{i in 1..N,j in 1..N,d in 1..G,w in 1..W:i!=j} binary; # X receives 1 when team i receives j on game day d of week w
+var Y{i in 1..N,j in 1..N:i!=j};      # defined for creating a schedule display matrix and Y takes slot number
+var Z{i in 1..N,j in 1..N:i!=j};      # defined for creating a schedule display matrix and Z takes corresponding date
+
+# Objective Function
+
+maximize Schedule: 0;  # this is just a scheduling problem
+
+subject to
+
+# Team i receives team j exactly P times.
+Constraint1{i in 1..N,j in 1..N:i!=j}: sum{w in 1..W,d in 1..G} X[i,j,d,w] =P;
+
+# Maximum F games in a Monday to Thursday block in a week
+Constraint2{w in 1..W}: sum{i in 1..N,j in 1..N,d in 1..F:i!=j} X[i,j,d,w]<=F;
+
+# Maximum F games on a Saturday
+Constraint3{w in 1..W}: sum{i in 1..N,j in 1..N,d in (F+1)..G:i!=j} X[i,j,d,w]<=F;
+
+# Atmost R games in one day from Monday to Thursday
+Constraint4{d in 1..F,w in 1..W}: sum{i in 1..N,j in 1..N:i!=j} X[i,j,d,w]<=R;
+
+# Atmost R games in a slot on a saturday
+constraint5{d in (F+1)..G,w in 1..W}: sum{ i in 1..N,j in 1..N:j!=i} X[i,j,d,w]<=R;
+
+# A team can play atmost T games from Monday - Thursday of a week
+Constraint6{i in 1..N,w in 1..W}: sum{d in 1..F,j in 1..N:j!=i} X[i,j,d,w] + sum{d in 1..F,j in 1..N:j!=i} X[j,i,d,w]<=T;
+
+# A team can play atmost T games on a Saturday
+Constraint7{d in (F+1)..G, i in 1..N,w in 1..W}: sum{t in 1..N:t!=i} X[i,t,d,w] + sum{t in 1..N:t!=i} X[t,i,d,w]<=T;
+
+# A game cannot be scheduled on a holiday
+Constraint8{d in 1..G, w in 1..W,i in 1..N,j in 1..N:i!=j}: H[d,w]<= (1-(X[i,j,d,w]));
+
+# Display Constraint - Y displays the slot number in which team i plays with team j
+Displayslot{i in 1..N,j in 1..N:i!=j}: Y[i,j] = sum{d in 1..G,w in 1..W} (K[d,w]*X[i,j,d,w]);
+
+# Display Constraint - Z displays the date on which team i plays with team j
+DisplayDate{i in 1..N, j in 1..N:i!=j}: Z[i,j]=sum{d in 1..G, w in 1..W}X[i,j,d,w]*U[d,w];
+
+

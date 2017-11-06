@@ -1,0 +1,50 @@
+#*********************************************************************************************************#
+#                                                                                                         #
+# Program Name      : little_league_baseball_model.txt                                                    #
+# File Location     : C:\Users\team8CG\2006\January\LittleLeagueBaseball\little_league_baseball_model.txt #                                                                #
+# Date First Created: 01-05-2006                                                                          #
+# Date Last Modified: 01-17-2006                                                                          #      
+# Created By        : Abhijeet Shinde                                                                     #
+#                     Naga Ramesh Kamisetti                                                               #                      
+#	              Prashanth Potana                                                                    #
+# Purpose           : Scheduling Baseball League for Little League Baseball College Station               #
+# Input Data File   : C:\Users\team8CG\2006\January\LittleLeagueBaseball\little_league_baseball_data.txt  # 
+# 													  #
+#*********************************************************************************************************#
+
+# Parameters used in the model
+
+param B;             # Total number of blocks
+param N{k in 1..B};  # Maximum number of games allowed in a block
+param T;             # Number of teams participating in the league 
+param H;             # Number of times each team must receive every other team
+param G;             # Maximum number of games a team can play in a block 
+
+
+# Variables used in the model
+
+var X{i in 1..T,j in 1..T,k in 1..B} binary; # X takes a value of 1 when team i receives team j in block k
+var Y{i in 1..T,j in 1..T:i!=j}; # defined for creating a schedule display matrix and Y takes block number
+
+# Objective Function
+
+minimize duration: ceil((T*(T-1))/(if floor(T/2)<G then (max(floor(T/2),G)) else min(floor(T/2),G)));
+
+subject to
+
+# Each team must recceive every other team exactly H times
+Constraint1{i in 1..T,j in 1..T:i!=j}: sum{k in 1..B} X[i,j,k]=H;
+
+
+# the game capacity of eachblock cannot be exceeded
+Constraint2{k in 1..B}: sum{i in 1..T,j in 1..T:i!=j} X[i,j,k]<=N[k];
+
+
+
+# In each block, each team can play at most G times
+
+Constraint3{k in 1..B, i in 1..T}: sum{t in 1..T:t!=i} X[i,t,k] + sum{t in 1..T:t!=i} X[t,i,k]<=G;
+
+
+# Y displays block number in which a game is scheduled
+Constraint4{i in 1..T,j in 1..T:i!=j}: Y[i,j] = sum{k in 1..B}(k * X[i,j,k]);

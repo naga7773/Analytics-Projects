@@ -1,0 +1,813 @@
+---
+title: "Who is making more than $50000"
+output:
+  pdf_document: default
+  html_notebook: default
+  word_document: default
+---
+
+```{r}
+library(ggplot2)
+library(rpart)
+library(e1071)
+library(ROCR)
+```
+
+
+```{r message=TRUE, warning=TRUE, }
+df1_train <- read.table(
+  "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+  na.strings = '?',header = F,strip.white=T,sep = ',')
+
+
+
+names(df1_train) <- c(
+  "age","workclass","fnlwgt","education","education_num","marital_status",
+  "occupation","relationship","race","sex","capital_gain","capital_loss",
+  "hours_per_week","native_country","income")
+
+```
+
+adding new columns:  
+```{r}
+
+df1_train$income_binary <- ifelse(df1_train$income=='>50K',1,0)
+
+df1_train$education_num <- as.ordered(df1_train$education_num)
+
+df1_train$income_binary <- as.factor(df1_train$income_binary)
+
+df1_train$education <- factor(df1_train$education,
+                            levels = c("Preschool","1st-4th","5th-6th","7th-8th","9th","10th",
+                                       "11th","12th","HS-grad","Some-college","Assoc-voc",
+                                       "Assoc-acdm","Bachelors","Masters","Prof-school","Doctorate"
+                                                                                       ))
+
+df1_train$education <- as.ordered(df1_train$education)
+```
+
+removing missing values:
+
+```{r}
+df1_train <- df1_train[complete.cases(df1_train),]
+
+```
+
+summarize the entire data set 
+
+```{r}
+str(df1_train)
+```
+
+#Univariate and Bivariate Analysis
+Discriptive stats about age
+```{r}
+summary(df1_train$age)
+```
+
+Lets plot how age is distributed
+```{r}
+ggplot(df1_train)+
+  geom_histogram(mapping = aes(x = age), color = "blue")
+```
+
+
+
+
+
+```{r}
+ggplot(data = df1_train)+
+  geom_boxplot(mapping = aes( x = income, y = age, fill = income))
+```
+
+```{r}
+ggplot(df1_train)+
+  geom_histogram(mapping = aes(x = age, fill = income),color = "black")
+```
+
+This variation of age for income levels clearly indicates that age is going to be an important variable in modelling. 
+
+Lets see how income is dependent on education
+```{r fig.width=12,fig.height=6}
+ggplot(data = df1_train)+
+  geom_bar(mapping = aes(x = education, fill = income))
+```
+
+
+
+```{r}
+t <- table(df1_train$education, df1_train$income)
+
+PercentMaking50K <- c(1:16)
+
+for(i in 1:16){
+  PercentMaking50K[i] <- round(((t[i,2])/(t[i,1]+t[i,2])*100),2)
+}
+
+names(PercentMaking50K) <- c("Preschool","1st-4th","5th-6th","7th-8th","9th","10th",
+                                       "11th","12th","HS-grad","Some-college","Assoc-voc",
+                                       "Assoc-acdm","Bachelors","Masters","Prof-school","Doctorate"
+                                                                                       )
+plot(PercentMaking50K,type = "b",
+     col = "blue",
+     main = " Percentage of people who make >50K in each level",
+     xlab = "Education Level",
+     ylab = "Percentage",
+     xlim = c(1,16),
+     ylim = c(0,100)
+)
+
+```
+
+We can see a clear upward trend which means with increasing education level 
+people have more chance of making more than $50000. So this variable is going to
+be helpful in modelling in next steps. 
+
+
+
+Lets explore marital status
+```{r}
+summary(df1_train$marital_status)
+```
+
+Intuitively these are very detailed separtaions. Lets make it more broad definitions. 
+
+First we have to convert this factor variable to character type to make changes
+
+
+```{r}
+df1_train$marital_status <- as.character(df1_train$marital_status)
+```
+
+Group1-3
+```{r}
+Married <- c("Married-AF-spouse", "Married-civ-spouse", "Married-spouse-absent")
+NeverMarried <- c("Never-married")
+Separated <- c("Divorced", "Widowed", "Separated")
+```
+
+```{r}
+df1_train$marital_status[df1_train$marital_status %in% Married] <- "married"
+df1_train$marital_status[df1_train$marital_status %in% Separated] <- "Separated"
+df1_train$marital_status <- as.factor(df1_train$marital_status)
+```
+
+```{r}
+summary(df1_train$marital_status)
+
+table(df1_train$income, df1_train$marital_status)
+```
+Lets plot barplot to see how income varies across this variable
+
+```{r}
+ggplot(data = df1_train)+
+  geom_bar(mapping = aes(x = marital_status, fill = income))
+```
+
+Clear distinction can be seen.
+
+
+
+```{r}
+summary(df1_train$occupation)
+```
+
+
+Again we see so many levels for this variable just like marital_status. Lets bring these in to smaller groups. 
+
+```{r}
+WhiteCollar <- c("Exec-managerial", "Prof-specialty")
+
+BlueCollar <- c("Adm-clerical", "Armed-Forces", "Protective-serv",
+                "Tech-support", "Machine-op-inspct", "Handlers-cleaners",
+                "Craft-repair", "Transport-moving")
+
+PinkCollar <- c("Farming-fishing", "Other-service", "Priv-house-serv", "Sales")
+```
+
+```{r}
+df1_train$occupation <- as.character(df1_train$occupation)
+
+df1_train$occupation[df1_train$occupation %in% WhiteCollar] <- "White_Collar"
+df1_train$occupation[df1_train$occupation %in% BlueCollar] <- "Blue_Collar"
+df1_train$occupation[df1_train$occupation %in% PinkCollar] <- "Pink_Collar"
+
+df1_train$occupation <- as.factor(df1_train$occupation)
+```
+
+```{r}
+summary(df1_train$occupation)
+```
+
+```{r}
+ggplot(data = df1_train)+
+  geom_bar(mapping = aes(x = occupation, fill = income))
+```
+
+This plot matches my intuition that white collared jobs have more chance of making $50K as 
+they are in managewrial position.
+
+
+Lets explore relationship variable
+```{r}
+summary(df1_train$relationship)
+```
+```{r}
+ggplot(data = df1_train)+
+  geom_bar(mapping = aes(x = relationship, fill = income))
+```
+
+
+```{r}
+#df1_train$family <- "family"
+
+In_Family <- c("Husband", "Wife", "Own-child")
+Not_In_Family <- c("Not-in-family", "Unmarried", "Other-relative")
+
+df1_train$family_relation[df1_train$relationship %in% In_Family] <- "In_Family"
+df1_train$family_relation[df1_train$relationship %in% Not_In_Family] <- "Not_In_Family"
+
+df1_train$family_relation <- as.factor(df1_train$family_relation)
+```
+```{r}
+summary(df1_train$family_relation)
+```
+
+
+
+```{r}
+ggplot(data  = df1_train)+
+  geom_bar(mapping = aes(x = family_relation, fill = income))
+```
+
+
+```{r}
+ggplot(data = df1_train)+
+  geom_bar(mapping = aes(x = race, fill = income))
+```
+
+```{r}
+summary(df1_train$capital_gain)
+```
+
+```{r}
+summary(df1_train$capital_loss)
+```
+
+
+Looking at this summary statistic we can see that most of the values are zero. So instead of 
+taking this as a contionus variable I want to consider this as a binary variable and see
+if it increases the performance of the algorithm. 
+
+Adding Some more columns
+```{r}
+
+#cg 1 for those who have some gain 
+df1_train$capital_gain_binary <- ifelse(df1_train$capital_gain==0,0,1)
+df1_train$capital_gain_binary <- as.factor(df1_train$capital_gain_binary)
+
+df1_train$capital_loss_binary <- ifelse(df1_train$capital_loss==0,0,1)
+df1_train$capital_loss_binary <- as.factor(df1_train$capital_loss_binary)
+
+#sex binary 1 for male 0 for female
+
+df1_train$sex_binary <- ifelse(df1_train$sex=="Male",1,0)
+df1_train$sex_binary <-as.factor(df1_train$sex_binary)
+```
+
+```{r}
+ggplot(data = df1_train)+
+  geom_boxplot(mapping = aes(x = income, y = hours_per_week, fill = income))
+```
+
+```{r}
+summary(df1_train$native_country)
+length(summary(df1_train$native_country))
+
+```
+
+As we can see there are people from 41 countries in this data set. Having too many levels in a factor variable is not good for modeling. Hence I created a binary variable which takes the value of 1 for United States and 0 for other countries. 
+
+```{r}
+df1_train$united_states <- ifelse(df1_train$native_country=="United-States",1,0)
+
+df1_train$united_states <-as.factor(df1_train$united_states)
+```
+
+```{r}
+
+```
+
+#Multivariate analysis
+
+Let us explore the relationship between various independent variables
+
+
+```{r fig.width = 12}
+ggplot(data = df1_train)+
+  geom_boxplot(mapping = aes(x = education, y = hours_per_week, color = education))
+  
+```
+
+
+```{r}
+ggplot(data = df1_train)+
+  geom_bar(mapping = aes(x = race))
+```
+
+Now our data set has 21 variables but some of these variables are just replicates of other variables like capital gain and loss binary variables. We have to make sure we are not using two variables representing the same property while modeling. 
+
+#Test Data Cleaning 
+
+Before we go in to modeling let us prepare out training data, cross validating data set and test data set. Becuase we made changes to the training set, similar changes must be made to the test data set as well. Lets begin by importing the test data set.
+
+```{r}
+df1_test <- read.table("https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.test",na.strings = '?',header = T,strip.white=T,sep = ',',col.names = c("age","workclass","fnlwgt","education","education_num","marital_status","occupation","relationship","race","sex","capital_gain","capital_loss","hours_per_week","native_country","income"))
+
+```
+
+There was a warning message that col.names are of different lengths. This is because at the URL specified first row had the dimensions of the data set. I ignored that row nby considering it as the header row and later over wrote it by manually giving the column names. 
+
+```{r}
+df1_test$education_num <- as.ordered(df1_test$education_num)
+
+df1_test$education <- factor(df1_test$education,
+                            levels = c("Preschool","1st-4th","5th-6th","7th-8th","9th","10th",
+                                       "11th","12th","HS-grad","Some-college","Assoc-voc",
+                                       "Assoc-acdm","Bachelors","Masters","Prof-school","Doctorate"
+                                                                                       ))
+
+df1_test$education <- as.ordered(df1_test$education)
+
+#test data has a different way of encoding the income variable with an additional "." followed by 50K
+
+df1_test$income_binary <- ifelse(df1_test$income=='>50K.',1,0)
+df1_test$income_binary <- as.factor(df1_test$income_binary)
+
+#remove missing value
+df1_test <- df1_test[complete.cases(df1_test), ]
+
+#native country variable
+df1_test$united_states <- ifelse(df1_test$native_country=="United-States",1,0)
+df1_test$united_states <-as.factor(df1_test$united_states)
+
+#capital gains variable
+df1_test$capital_gain_binary <- ifelse(df1_test$capital_gain==0,0,1)
+df1_test$capital_gain_binary <- as.factor(df1_test$capital_gain_binary)
+
+#caoital loss variable
+df1_test$capital_loss_binary <- ifelse(df1_test$capital_loss==0,0,1)
+df1_test$capital_loss_binary <- as.factor(df1_test$capital_loss_binary)
+
+#sex variable
+df1_test$sex_binary <- ifelse(df1_test$sex=="Male",1,0)
+df1_test$sex_binary <- as.factor(df1_test$sex_binary)
+
+
+#marital status variable change
+df1_test$marital_status <- as.character(df1_test$marital_status)
+
+df1_test$marital_status[df1_test$marital_status %in% Married] <- "married"
+df1_test$marital_status[df1_test$marital_status %in% Separated] <- "Separated"
+df1_test$marital_status <- as.factor(df1_test$marital_status)
+
+#occupation variable
+df1_test$occupation <- as.character(df1_test$occupation)
+
+df1_test$occupation[df1_test$occupation %in% WhiteCollar] <- "White_Collar"
+df1_test$occupation[df1_test$occupation %in% BlueCollar] <- "Blue_Collar"
+df1_test$occupation[df1_test$occupation %in% PinkCollar] <- "Pink_Collar"
+
+df1_test$occupation <- as.factor(df1_test$occupation)
+
+#relationship variable
+
+df1_test$family_relation[df1_test$relationship %in% In_Family] <- "In_Family"
+df1_test$family_relation[df1_test$relationship %in% Not_In_Family] <- "Not_In_Family"
+
+df1_test$family_relation <- as.factor(df1_test$family_relation)
+
+```
+
+Let us export these two data sets. 
+```{r }
+write.csv(df1_train,file = "Adult_Train_Modified.csv", row.names = F)
+write.csv(df1_test,file = "Adult_Test_Modified.csv", row.names = F)
+```
+
+
+#modeling
+
+I want to further divide my training data set in to train and cross validation set. I will use the cross validation set to choose the parameter values of different algorithms I want to use on this data. For this purpose I will randomly sample 25% data in to CV set. Also I will use a seed value so that every time I replicate this code in future I will end up with same cv data set. 
+
+```{r}
+
+train_size <- floor(0.75 * nrow(df1_train))
+
+set.seed(999)
+training_index <- sample(nrow(df1_train), size = train_size)
+
+df2_train <- df1_train[training_index, ]
+df2_cv <- df1_train[-training_index, ]
+
+df2_cv.Y <- df2_cv[,"income_binary"]
+
+drops <- c("income_binary","income")
+
+df2_cv.X <- df2_cv[ , !(names(df2_cv) %in% drops)]
+
+```
+
+
+The resulting training data has 22621 rows and cv set has 7541 rows. 
+
+
+#Baseline Metrics
+```{r}
+
+summary(df2_train$income)
+```
+
+
+```{r}
+19963/(19963+5658)
+```
+
+That is 77.91% is the base model accuracy which predicts that income is less than 50K for every input X. Any modle that we build has to get accuracy much more than this value or the model is useless. 
+
+##Logistic Regression
+
+Let us use all of the numerical variables and see how our model predicts the outcome. 
+
+```{r}
+LR_fit1 <- glm(data = df2_train,
+               income_binary ~ age + education_num + capital_gain + capital_loss +
+                 hours_per_week, family = "binomial")
+```
+
+There is a warning message that fitted probabilities of 0 0r 1 occured. This indicates that one or the other variables are very strong enough to directly predict the outcome. Let us delete one by one and see which variable is causing this issue. 
+
+```{r}
+LR_fit2 <- glm(data = df2_train,
+               income_binary ~ age + education_num + capital_gain +
+                 hours_per_week, family = "binomial")
+```
+
+```{r}
+LR_fit3 <- glm(data = df2_train,
+               income_binary ~ age + education_num + capital_loss +
+                 hours_per_week, family = "binomial")
+```
+
+
+```{r}
+LR_fit4 <- glm(data = df2_train, income ~ capital_gain, family = "binomial")
+```
+
+```{r}
+summary(LR_fit4)
+```
+
+
+So it is the capital_gain variable. What is so special about this variable? Let us again explore this variable. This is the case of linear separation. 
+
+
+```{r}
+LR_fit5 <- glm(data = df2_train,
+               income_binary ~ capital_loss + age + education_num + hours_per_week,
+               family = "binomial")
+```
+
+Because we are going to test different fits let us create a fucntion which will out put the confusiomn matric results for us. 
+
+```{r}
+testing_model_performance<- function(fit, testdataX, testdataY, baseprobability){
+  predicted_probs <- predict(fit, newdata = testdataX, type = "response")
+  prediction_result <- rep(0, length(testdataY))
+  prediction_result <- ifelse(predicted_probs > baseprobability, 1, 0)
+  t <- table(testdataY, prediction_result)
+  accuracy <- (t[1]+t[4])/(length(testdataY))
+  true_positive_rate <- (t[4])/(t[2]+t[4]) #sensitivity
+  true_negative_rate <- (t[1])/(t[1]+t[3]) #specificity
+  precision <- t[4]/(t[3]+t[4])            #positive predictive value
+                                     #of all identified as positives how many are actually positive
+  recall <- t[4]/(t[2]+t[4])               #of all positives seen how many are correctly identified
+  print(t)
+  print(paste("Accuracy :",accuracy))
+  
+  print(paste("Precision :",precision))
+  
+  print(paste("Recall :",recall))
+  
+}
+```
+
+
+Let us select those columns from the cv set to test the model
+
+```{r}
+column_list <- c("age", "hours_per_week", "capital_loss", "education_num")
+
+df2_cv.X <- df2_cv[,names(df2_cv) %in% column_list]
+
+df2_cv.Y <- df2_cv$income_binary
+
+```
+
+prediction reults of fit5 using base value of 0.5 as cutoff
+
+```{r}
+testing_model_performance(LR_fit5,df2_cv.X,df2_cv.Y,0.5)
+```
+
+As the recall value indicates, this model predicts only 34.9% times of the times it sees a positive example. This is a bit better than the base line metrics of predicting positive result for every example. The accuracy is 78.96 which is very small increase over the base line accuracy of 77.9%
+
+
+To improve the accuracy of the model let us keep adding other categorical variables. 
+
+adding sex variable to the model:
+
+```{r}
+column_list <- c("age", "hours_per_week", "capital_loss", "education_num", "sex_binary")
+
+df2_cv.X <- df2_cv[,names(df2_cv) %in% column_list]
+
+df2_cv.Y <- df2_cv$income_binary
+
+Model_train_Data <- df2_train[,names(df2_train) %in% column_list]
+Model_train_Data$income_binary <- df2_train$income_binary
+```
+
+```{r}
+LR_fit6 <- glm(data = Model_train_Data, income_binary ~., family = "binomial")
+summary(LR_fit6)
+```
+
+As per this model education is not an importamt variable to predict income. 
+
+Let us test this model.
+
+```{r}
+testing_model_performance(LR_fit6,df2_cv.X,df2_cv.Y,0.5)
+```
+
+Accuracy slighly increased to 80%. Let us keep adding other variables as well.
+
+```{r}
+column_list <- c("age", "hours_per_week", "capital_loss", "sex_binary", "workclass")
+
+df2_cv.X <- df2_cv[,names(df2_cv) %in% column_list]
+
+df2_cv.Y <- df2_cv$income_binary
+
+Model_train_Data <- df2_train[,names(df2_train) %in% column_list]
+Model_train_Data$income_binary <- df2_train$income_binary
+
+LR_fit7 <- glm(data = Model_train_Data, income_binary ~., family = "binomial")
+summary(LR_fit7)
+```
+
+It look slike workclass is an important variable. we have been ignoring this variable since the beginning. Infact it negatively affects the income. Let us test this model accuracy.
+
+```{r}
+testing_model_performance(LR_fit7,df2_cv.X,df2_cv.Y,0.5)
+```
+
+Its addition actually decreased th eaccuracy. So let us delete it form our variable list. 
+
+
+```{r}
+
+column_list <- c("age", "hours_per_week", "capital_loss", "sex_binary")
+
+df2_cv.X <- df2_cv[,names(df2_cv) %in% column_list]
+
+df2_cv.Y <- df2_cv$income_binary
+
+Model_train_Data <- df2_train[,names(df2_train) %in% column_list]
+Model_train_Data$income_binary <- df2_train$income_binary
+
+LR_fit8 <- glm(data = Model_train_Data, income_binary ~., family = "binomial")
+summary(LR_fit8)
+
+```
+
+```{r}
+testing_model_performance(LR_fit8,df2_cv.X,df2_cv.Y,0.5)
+```
+
+Accuracy dropped when we exclude education_num. Hence let us keep it in further analysis.
+
+
+```{r}
+column_list <- c("age", "hours_per_week", "capital_loss", "sex_binary", "education_num", "workclass")
+
+df2_cv.X <- df2_cv[,names(df2_cv) %in% column_list]
+
+df2_cv.Y <- df2_cv$income_binary
+
+Model_train_Data <- df2_train[,names(df2_train) %in% column_list]
+Model_train_Data$income_binary <- df2_train$income_binary
+
+LR_fit9 <- glm(data = Model_train_Data, income_binary ~., family = "binomial")
+summary(LR_fit9)
+```
+
+```{r}
+testing_model_performance(LR_fit9,df2_cv.X,df2_cv.Y,0.5)
+```
+
+```{r}
+column_list <- c("age", "hours_per_week", "capital_loss", "sex_binary", "education_num", "race")
+
+df2_cv.X <- df2_cv[,names(df2_cv) %in% column_list]
+
+df2_cv.Y <- df2_cv$income_binary
+
+Model_train_Data <- df2_train[,names(df2_train) %in% column_list]
+Model_train_Data$income_binary <- df2_train$income_binary
+
+LR_fit10 <- glm(data = Model_train_Data, income_binary ~., family = "binomial")
+summary(LR_fit10)
+testing_model_performance(LR_fit10,df2_cv.X,df2_cv.Y,0.5)
+```
+
+```{r}
+column_list <- c("age", "hours_per_week", "capital_loss", "sex_binary", "education_num", "united_states")
+
+df2_cv.X <- df2_cv[,names(df2_cv) %in% column_list]
+
+df2_cv.Y <- df2_cv$income_binary
+
+Model_train_Data <- df2_train[,names(df2_train) %in% column_list]
+Model_train_Data$income_binary <- df2_train$income_binary
+
+LR_fit11 <- glm(data = Model_train_Data, income_binary ~., family = "binomial")
+summary(LR_fit11)
+testing_model_performance(LR_fit11,df2_cv.X,df2_cv.Y,0.5)
+```
+
+```{r}
+column_list <- c("age", "hours_per_week", "capital_loss", "sex_binary", "education_num", "united_states", "family_relation")
+
+df2_cv.X <- df2_cv[,names(df2_cv) %in% column_list]
+
+df2_cv.Y <- df2_cv$income_binary
+
+Model_train_Data <- df2_train[,names(df2_train) %in% column_list]
+Model_train_Data$income_binary <- df2_train$income_binary
+
+LR_fit12 <- glm(data = Model_train_Data, income_binary ~., family = "binomial")
+summary(LR_fit12)
+testing_model_performance(LR_fit12,df2_cv.X,df2_cv.Y,0.5)
+```
+
+```{r}
+column_list <- c("age", "hours_per_week", "capital_loss", "sex_binary", "education_num", "united_states", "family_relation", "race", "workclass", "occupation" ,"marital_status")
+
+df2_cv.X <- df2_cv[,names(df2_cv) %in% column_list]
+
+df2_cv.Y <- df2_cv$income_binary
+
+Model_train_Data <- df2_train[,names(df2_train) %in% column_list]
+Model_train_Data$income_binary <- df2_train$income_binary
+
+LR_fit13 <- glm(data = Model_train_Data, income_binary ~., family = "binomial")
+
+
+
+summary(LR_fit13)
+testing_model_performance(LR_fit13,df2_cv.X,df2_cv.Y,0.5)
+```
+
+```{r}
+testing_model_performance(LR_fit13,df2_cv.X,df2_cv.Y,0.2)
+testing_model_performance(LR_fit13,df2_cv.X,df2_cv.Y,0.3)
+testing_model_performance(LR_fit13,df2_cv.X,df2_cv.Y,0.4)
+testing_model_performance(LR_fit13,df2_cv.X,df2_cv.Y,0.5)
+testing_model_performance(LR_fit13,df2_cv.X,df2_cv.Y,0.6)
+testing_model_performance(LR_fit13,df2_cv.X,df2_cv.Y,0.7)
+```
+
+
+#Error Rate for unseen test data
+
+```{r}
+column_list <- c("age", "hours_per_week", "capital_loss", "sex_binary", "education_num", "united_states", "family_relation", "race", "workclass", "occupation" ,"marital_status")
+
+df1_test.X <- df1_test[,names(df1_test) %in% column_list]
+
+df1_test.Y <- df1_test$income_binary
+testing_model_performance(LR_fit13,df1_test.X,df1_test.Y,0.5)
+```
+
+```{r}
+length(df1_test.Y)
+```
+
+```{r}
+summary(df1_test.Y)
+```
+
+
+```{r}
+11360/(11360+3700)
+```
+
+
+```{r}
+library(nnet)
+nnet.fit = nnet(income_binary~., data=Model_train_Data,size=10,maxit=10000,decay=.001)
+nnet.preds = predict(nnet.fit,newdata=df2_cv.X,type="raw")
+
+```
+
+```{r}
+library(ROCR)
+#nnet_pred = prediction(nnet.preds,df2_cv.Y)
+#nnet_perf = performance(nnet.pred,"tpr","fpr")
+```
+
+```{r}
+# plot(nnet.perf,lwd=2,col="blue",main="ROC - Neural Network on Adult")
+# abline(a=0,b=1)
+```
+
+```{r}
+table(df1_test.Y,predict(nnet.fit,newdata=df1_test.X,type="class"))
+```
+nnet has 58.51 recall and 82.91 accuracy
+```{r}
+1101/(1101+749)
+```
+
+```{r}
+(5125+1101)/(5125+566+749+1101)
+```
+
+Let us try support vector machines
+
+```{r}
+#install.packages("e1071")
+library(e1071)
+```
+
+```{r}
+# svm.model <- svm(Type ~ ., data = trainset, cost = 100, gamma = 1)
+# > svm.pred <- predict(svm.model, testset[,-10])
+```
+
+```{r}
+#svm_fit1 <- svm(income_binary ~., data = Model_train_Data, cost = 100, gamma = 1,probability=TRUE)
+
+```
+
+```{r}
+
+
+# svm_pred <- predict(svm_fit1, df1_test.X, probability = T)
+# 
+# svm_preds <- prediction(svm_pred, df1_test.Y)
+# svm_perf <- performance(svm_preds,"tpr","fpr" )
+#table(df2_cv.Y, svm_pred)
+```
+
+svm has 56.27 recall and 80.41 accuracy
+
+decison tree
+```{r}
+#install.packages("rpart")
+library(rpart)
+```
+
+
+
+```{r}
+# LR_fit13 <- glm(data = Model_train_Data, income_binary ~., family = "binomial")
+# 
+# LR_pred <- predict(LR_fit13, newdata = df2_cv.X, type = "response")
+# 
+# LR_preds <- prediction(LR_pred,df2_cv.Y)
+# LR_perf <- performance(LR_preds,"tpr","fpr")
+
+tree_fit1 <- rpart(income_binary ~ ., data = Model_train_Data)
+tree_pred <- predict(tree_fit1, df1_test.X, type = "prob")[,2]
+tree_preds <- prediction(tree_pred,df1_test.Y)
+#table(df2_cv.Y, tree_pred)
+```
+
+decision tree has 50.97 recall and 81.92 accuracy
+```{r}
+LR_pred <- predict(LR_fit13, newdata = df1_test.X, type = "response")
+
+LR_preds <- prediction(LR_pred,df1_test.Y)
+LR_perf <- performance(LR_preds,"tpr","fpr")
+```
+
+
+```{r}
+tree_perf <- performance(tree_preds,"tpr","fpr")
+#svm_perf <- performance(svm_pred,"tpr","fpr")
+#nnet_perf <- performance(nnet_pred,"tpr","fpr")
+LR_perf <- performance(LR_preds,"tpr","fpr")
+```

@@ -1,0 +1,60 @@
+#***********************************************************************************************************#
+#                                                                                                           #
+# Program Name      : little_league_baseball_data_2.txt                                                     #
+# File Location     : C:\Users\team8CG\2006\January\LittleLeagueBaseball\little_league_baseball_data_2.txt  #                                                                
+# Date First Created: 01-05-2006                                                                            #
+# Date Last Modified: 01-17-2006                                                                            #      
+# Created By        : Abhijeet Shinde                                                                       #
+#                     Naga Ramesh Kamisetti                                                                 #                      
+#	              Prashanth Potana                                                                      #
+# Purpose           : Scheduling Baseball League for Little League Baseball College Station                 #
+# Input Data File   : C:\Users\team8CG\2006\January\LittleLeagueBaseball\little_league_baseball_model_2.txt # 
+# 					                                                                    #
+#***********************************************************************************************************#
+
+param N:=9;  # Number of teams participating in league
+param W:=12; # Number of weeks
+param G:=8;  # Maximum possible number of games in a week
+param F:=4;  # Maximum possible number of games from Monday to Thursday or on a Saturday in a week
+param P:=1;  # Number of times each team must receive every other team
+param R:=1;  # Maximum number of games possible on a day from Monday - Thursday or in a slot on Saturday
+param T:=1;  # Maximum number of games for a team on Monday - Thursday block or on a Saturday
+
+
+param H: 1 2 3 4 5 6 7 8 9 10 11 12:=  # gets the value 1 if the corresponding day is holiday otherwise 0
+      1  0 0 0 0 1 0 0 0 0  0  0  1
+      2  0 0 0 0 1 0 0 0 0  0  0  0
+      3  0 0 0 0 1 0 0 0 0  0  0  0
+      4  0 0 0 0 1 0 0 0 0  0  0  1
+      5  0 0 0 1 1 0 0 0 0  0  1  1
+      6  0 0 0 1 1 0 0 0 0  0  1  1
+      7  0 0 0 1 1 0 0 0 0  0  1  1
+      8  0 0 0 1 1 0 0 0 0  0  1  1;
+  
+  
+param K: 1  2  3  4 5  6  7  8  9 10 11 12:=  # slot number ranging from 1-74 (possible number of game slots) 
+      1  1 9  17 25 0 29 37 45 53 61 69  0 
+      2  2 10 18 26 0 30 38 46 54 62 70 73
+      3  3 11 19 27 0 31 39 47 55 63 71 74
+      4  4 12 20 28 0 32 40 48 56 64 72  0
+      5  5 13 21 0  0 33 41 49 57 65  0  0
+      6  6 14 22 0  0 34 42 50 58 66  0  0
+      7  7 15 23 0  0 35 43 51 59 67  0  0
+      8  8 16 24 0  0 36 44 52 60 68  0  0;
+
+
+
+param U: 1 2 3 4 5 6 7 8 9 10 11 12:=  # gets the date corresponding to game slot on a day and week
+1	31306	32006	32706	40306	41006	41706	42406	50106	50806	51506	52206	52906
+2	31406	32106	32806	40406	41106	41806	42506	50206	50906	51606	52306	53006
+3	31506	32206	32906	40506	41206	41906	42606	50306	51006	51706	52406	53106
+4	31606	32306	33006	40606	41306	42006	42706	50406	51106	51806	52506	60106
+5	31806	32506	40106	40806	41506	42206	42906	50606	51306	52006	52706	60306
+6	31806	32506	40106	40806	41506	42206	42906	50606	51306	52006	52706	60306
+7	31806	32506	40106	40806	41506	42206	42906	50606	51306	52006	52706	60306
+8	31806	32506	40106	40806	41506	42206	42906	50606	51306	52006	52706	60306;
+
+
+
+
+
