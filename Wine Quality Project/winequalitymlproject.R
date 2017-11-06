@@ -91,31 +91,23 @@ nn_acc
 importance(rf.fit)
 
 
-bad  average     good MeanDecreaseAccuracy MeanDecreaseGini
-fixed.acidity        37.31477 34.20959 22.06420             49.53575         116.8136
-volatile.acidity     67.62890 67.87021 35.77009             87.03264         201.6612
-citric.acid          36.05474 42.17557 23.06347             52.28254         137.4568
-residual.sugar       36.83541 44.47620 17.68827             59.18256         142.0443
-chlorides            40.91082 38.18869 23.07675             50.04954         142.5658
-free.sulfur.dioxide  50.05817 48.52988 28.41387             70.62745         167.4730
-total.sulfur.dioxide 36.20287 39.19218 22.70450             51.64052         145.9411
-density              31.54109 41.94301 27.64068             54.79205         182.0533
-pH                   40.82955 40.25407 24.89518             55.76853         135.8934
-sulphates            33.43826 31.06024 29.62987             47.48371         118.8915
-alcohol              68.41668 48.06367 48.96977             76.86050         222.3791
+#bad  average     good MeanDecreaseAccuracy MeanDecreaseGini
+#fixed.acidity        37.31477 34.20959 22.06420             49.53575         116.8136
+#volatile.acidity     67.62890 67.87021 35.77009             87.03264         201.6612
+#citric.acid          36.05474 42.17557 23.06347             52.28254         137.4568
+#residual.sugar       36.83541 44.47620 17.68827             59.18256         142.0443
+#chlorides            40.91082 38.18869 23.07675             50.04954         142.5658
+#free.sulfur.dioxide  50.05817 48.52988 28.41387             70.62745         167.4730
+#total.sulfur.dioxide 36.20287 39.19218 22.70450             51.64052         145.9411
+#density              31.54109 41.94301 27.64068             54.79205         182.0533
+#pH                   40.82955 40.25407 24.89518             55.76853         135.8934
+#sulphates            33.43826 31.06024 29.62987             47.48371         118.8915
+#alcohol              68.41668 48.06367 48.96977             76.86050         222.3791
 
-train_data %>%
-  dplyr::select(rating,chlorides, alcohol)%>%
-  ggplot()+
-  geom_point(aes(y = chlorides, x = alcohol, col = rating))
+# As higher accuracy is achieved using random forest algorithm, cross validation is performed using a for loop. 
+
 
 #### RandomForest ######
-rf.fit <- randomForest(rating~.-quality-quality_factor,data = train_data, mtry = 3, importance = T)
-rf.pred <- predict(rf.fit, newdata = test_data)
-table(rf.pred, test_data$rating)
-rf_acc <- mean(rf.pred == test_data$rating)
-rf_acc
-
 previous_rf_acc = 0
 for (i in c(1:20)){
   
@@ -137,6 +129,7 @@ for (i in c(1:20)){
 }
 
 #best fit is saved as rf.fit.1
+rf.fit.1 <- bestfit
 # rf.fit.1 
 rf.pred <- predict(rf.fit.1, newdata = test_data)
 table(rf.pred, test_data$rating)
