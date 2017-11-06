@@ -1,0 +1,19 @@
+Title: Data Explorationu using Python
+Author: Naga Kamisetti
+
+The aim of this project is to use python for data analysis using the Numpy and Pandas libraries
+to explore titanic data set obtained from the kaggle website. 
+
+The HTML file consists of both report and code, written in an interactive way using 
+jupyter python notebook. In addition to the Numpy and Pandas libraries, I used Seaborn and matplotlib 
+for creating visualizations. 
+ 
+The csv files includes all the data used in creating this report. There are some missing values in the data.
+
+The JPEG image shows the sample query using the API to get data from the oprnstreetmap database.
+
+Skills Used: Python, Descriptive Statistics
+
+
+FOr further questions/comments/suggestions please email me at: 
+nagaramesh2009@gmail.com

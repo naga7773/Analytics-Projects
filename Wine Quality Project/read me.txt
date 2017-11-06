@@ -1,0 +1,19 @@
+Title: Exploratory Data Analysis of White Wine Quality
+
+Author: Naga Ramesh Kamisetti
+
+Date: September 26, 2016
+
+The aim of this project is to explore different techniques available
+in R for creating meaningful visualizations while understanding the procedure
+of exploratory analysis of large data sets. In this project I used ggplot2 
+library for creating layer by layer plots.
+
+The RMD file contains all the R code.
+
+The HTML file contains the report along with visualizations. 
+
+The JPEG file is the correlation plot.
+
+For further details/comments/suggestions please email me at
+nagaramesh2009@gmail.com
