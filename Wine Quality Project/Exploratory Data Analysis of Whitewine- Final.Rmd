@@ -123,7 +123,7 @@ There are 1060 observations having a rating of "good" and 183 having rating
 
 # Univariate Analysis
 
-I want to see how the ariables are distributed. Whenever there is an indication
+I want to see how the variables are distributed. Whenever there is an indication
 of outliers from the summary, I used limits to exclude some of the outliers. 
 
 ```{r message=FALSE, warning= FALSE,quality_histogram}
