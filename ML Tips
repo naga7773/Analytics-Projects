@@ -1,0 +1,91 @@
+Hands on ML with SK Learn and TensorFlow
+Author: Aurelien Geron
+
+Machine Learning is making machine better at doing a task without explicitly coding rules. 
+
+Chapter 1:
+
+Different types of ML Systems:
+
+1.	Supervised Learning:
+a.	Where you have labelled data that can be used to train the model
+a.	Example:
+Decision Trees, Linear Regression, SVM
+2.	Unsupervised Learning:
+a.	We have training data without the labels. 
+Example: 
+i.	Data Visualization and Dimensionality reduction techniques like PCA
+ii.	Association Rules like Supermarket placement of items by analyzing the sale receipt to find out items sold together. 
+iii.	Clustering algorithms like K-means to find out different sub groups in data
+ 
+3.	Semi-supervised Learning:
+Google Photo tagging where you just tag one instance of a person
+ 
+4.	Reinforcement Learning:
+Robot learning a policy that helps it to learn walking by learning from the feedback of previous actions taken. 
+
+Different ways to train the model:
+1.	Batch Learning
+a.	Train the model with all of the training data once and then use the trained model in production. 
+b.	If there is new data available for training, then use the old and new data together to train the model again from scratch. 
+c.	This is also called offline learning. 
+2.	Online Learning:
+a.	Train the model with individual or mini batches of training data incrementally on the fly. 
+b.	This saves memory problems as the old trained data can be taken out of the system once the model learns from it. 
+c.	We have to figure out the learning rate at which the model needs to change according to the new data. This depends on the specific application. 
+d.	The whole process is done offline and not on the production servers. So not to confuse with the term online learning. 
+Based on how the model generalizes to new data from what it learned from trained data:
+1.	Instance based Learning:
+a.	In this, the machine learning model learns by first remembering the training instances and then finding the similarity between the new instance to the old instances and then identifying the outcome of this new instance as that of the similar old instances. 
+i.	Example: K Nearest Neighbors algorithm 
+2.	Model Based Learning:
+a.	In this type of machine learning, a predefined model is selected and trained usingthe trained data to learn the parameter values. This model is then used to generalize to new instances of the data. 
+i.	Ex: Linear Regression 
+Main Challenges of Machine Learning:
+1.	Insufficient Data:
+a.	The more training data, the better your model learns. 
+b.	It is proven that, different algorithms had performance improvements when more data is used for training the data. 
+2.	Bad Data:
+a.	Data with lot of outliers and missing data brings noise to the data and results in bad model. 
+b.	Even sophisticated algorithms will perform less with bad data. 
+3.	Irrelevant features:
+a.	Even if you have large dataset but if that data is not relevant to the task, it is of no use for the machine learning model. 
+b.	In order to mitigate this issue, feature engineering is performed.	
+i.	Feature selection: selecting relevant features from the dataset
+ii.	Feature extraction: Combining different features to get new features
+iii.	Feature creation: obtaining new features by collecting new data
+4.	Overfitting the training data:
+a.	Overfitting is a case where the model fails to generalize well to the test data but performs better on the training data. 
+b.	This happens when the model learns from the noise in the data instead of the actual trend. 
+c.	We can reduce over fitting by constraining the model using a process called regularization.  In this we penalize the model for having more parameters and there by constraining it to choose values for those parameters such that the complexity decreases overall. 
+5.	Underfitting the training data:
+a.	This happens when the model is simple enough that it misses to catch the patterns of the data. 
+b.	This can be eliminated by choosing a better learning algorithm or by increasing the dataset size. 
+Testing and Validating a ML model:
+1.	Test Data:
+a.	In order to measure the performance of the ml system built, we can split the data into training and test data. After training the data with the training data we can test the model on the test data. 
+b.	It is very common to have a validation dataset that is used to compare different models and hyper parameter values before finalizing a model and then testing it on the test dataset to find out the generalization error. 
+c.	Instead of using more data for splitting it as a train, validation, and test datasets, a common approach is to use cross validation where data is separated into batches. One batch is hold as a test data and the remaining is used to estimate the generalization error. This process is repeated with different batches as training data and then the generalization error is estimated using all of the generalization errors obtained.  
+
+Chapter 2
+Machine Learning project – Step by Step guide:
+1.	Frame the Problem:
+a.	What is the objective?
+b.	How is the model going to be used?
+c.	What is the current scenario?
+Now ask yourself, if this should be supervised learning task or unsupervised, batch learning or online learning?
+Example Dataset: Predicting median house price in the district given other details like population from the census data. 
+So this is a supervised ml and multivariate regression problem. 
+2.	Choose what performance metric will be used:
+a.	In regression commonly we use Root Mean Square error.
+b.	But if there are outlier districts, we can use mean absolute error. 
+c.	RMSE is l2 norm and MAE is l1 norm. The higher the norm index, the higher weightage they give to higher values. 
+3.	Check any assumptions made by you or others in the process or in expected input/output. 
+
+Process:
+1.	Get data and read it in to the system and make sure the data is read in properly. 
+2.	Explore the data using Data Exploration techniques. 
+3.	Use summary statistics or distribution charts like histogram to identify how the data is distributed. 
+4.	Find out if there are any missing values. If any, see if they can be replaced with values or if the rows with missing data can be ignored (if dataset is small, this is a bad step). 
+5.	Create a test set. 
+6.	Any transformations made to the training data need to be properly documented so that same transformations can be applied to the test data before measuring the performance of the system.
