@@ -89,3 +89,7 @@ Process:
 4.	Find out if there are any missing values. If any, see if they can be replaced with values or if the rows with missing data can be ignored (if dataset is small, this is a bad step). 
 5.	Create a test set. 
 6.	Any transformations made to the training data need to be properly documented so that same transformations can be applied to the test data before measuring the performance of the system.
+
+Creating a Test Set:
+Data in test set should never be used to train the model. In general, we use random number generators to split the dataset into train and test datasets. But one problem with this approach is, in subsequent runs, the random number generator will generate different test and train data. To remediate this, we can either separate a test dataset and export it to a different file and never modify it. Instead, we can use a hash function to generate the hash values using the unique identifier for each row in the dataset and then use some condition on that hash values so that we can get a random test dataset in required proportion. These hash values will always be the same for the given input there by giving us the same test dataset in all runs. If the data is updated, still all the previous data that was in test data will be again assigned to test dataset because of the unique hash values. 
+
